@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Net;
 using AngleSharp.Dom;
 
 namespace UniqueWords.BL
@@ -52,7 +53,7 @@ namespace UniqueWords.BL
                 _htmlController.DownloadHtml(uri);
                 document = _htmlController.GetHtmlDocument(uri);
             }
-            catch (Exception e)
+            catch (WebException)
             {
                 _logger.AddLog(log + " is failed");
                 throw;
