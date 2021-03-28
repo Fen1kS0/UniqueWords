@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Linq;
+using AngleSharp.Dom;
 
 namespace UniqueWords.BL
 {
     public class Parser
     {
         private readonly HtmlController _htmlController;
+        private readonly Logger _logger;
         
         private readonly char[] _separators =
         {
@@ -31,6 +33,7 @@ namespace UniqueWords.BL
         public Parser()
         {
             _htmlController = new HtmlController();
+            _logger = new Logger();
         }
         
         /// <summary>
@@ -40,9 +43,23 @@ namespace UniqueWords.BL
         /// <returns>Массив группировок уникальных слов</returns>
         public IGrouping<string, string>[] GetWordGrouping(Uri uri)
         {
-            _htmlController.DownloadHtml(uri);
-            var document = _htmlController.GetHtmlDocument(uri);
+            string log = $"{DateTime.Now} Connect to {uri.AbsoluteUri}"; 
+
+            IDocument document;
             
+            try
+            {
+                _htmlController.DownloadHtml(uri);
+                document = _htmlController.GetHtmlDocument(uri);
+            }
+            catch (Exception e)
+            {
+                _logger.AddLog(log + " is failed");
+                throw;
+            }
+            
+            _logger.AddLog(log + " is success");
+
             return document.All
                 .Where(e => _greenList.Contains(e.LocalName))
                 .Select(e => e.TextContent.ToUpper())
