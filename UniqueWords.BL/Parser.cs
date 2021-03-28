@@ -1,14 +1,12 @@
 ﻿using System;
-using System.IO;
 using System.Linq;
-using System.Net;
-using AngleSharp;
-using AngleSharp.Dom;
 
 namespace UniqueWords.BL
 {
-    public class Parser 
+    public class Parser
     {
+        private readonly HtmlController _htmlController;
+        
         private readonly char[] _separators =
         {
             ' ', ',', '.', '!', '?','\'', '"', ';',
@@ -30,36 +28,10 @@ namespace UniqueWords.BL
             "th", "td", "u"
         };
 
-        public IDocument GetHtmlDocument(Uri uri)
+        public Parser()
         {
-            if (!uri.IsWellFormedOriginalString())
-                throw new ArgumentException("Ошибка адреса web страницы");
-            
-            var config = Configuration.Default;
-
-            var context = BrowsingContext.New(config);
-            
-            DownloadHtml(uri);
-            var source = GetHtmlInString(uri);
-
-            return context.OpenAsync(req => req.Content(source)).Result;
+            _htmlController = new HtmlController();
         }
-
-        public void DownloadHtml(Uri uri)
-        {
-            using WebClient webClient = new WebClient();
-            
-            string path = Directory.GetCurrentDirectory() + @"\Sites\";
-            Directory.CreateDirectory(path);
-            
-            webClient.DownloadFileAsync(uri, @$"{path}{uri.Host}.html");
-        }
-
-        public string GetHtmlInString(Uri uri)
-        {
-            using WebClient webClient = new WebClient();
-            return webClient.DownloadString(uri);
-        } 
         
         /// <summary>
         /// Разбитие текста страницы на отдельные слова с помощью списка разделителей,
@@ -68,7 +40,8 @@ namespace UniqueWords.BL
         /// <returns>Массив группировок уникальных слов</returns>
         public IGrouping<string, string>[] GetWordGrouping(Uri uri)
         {
-            var document = GetHtmlDocument(uri);
+            _htmlController.DownloadHtml(uri);
+            var document = _htmlController.GetHtmlDocument(uri);
             
             return document.All
                 .Where(e => _greenList.Contains(e.LocalName))
