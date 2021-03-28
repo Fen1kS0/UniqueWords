@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Net;
 using AngleSharp;
@@ -37,16 +38,26 @@ namespace UniqueWords.BL
             var config = Configuration.Default;
 
             var context = BrowsingContext.New(config);
-
+            
+            DownloadHtml(uri);
             var source = GetHtmlInString(uri);
 
             return context.OpenAsync(req => req.Content(source)).Result;
         }
 
-        public string GetHtmlInString(Uri uri)
+        public void DownloadHtml(Uri uri)
         {
             using WebClient webClient = new WebClient();
             
+            string path = Directory.GetCurrentDirectory() + @"\Sites\";
+            Directory.CreateDirectory(path);
+            
+            webClient.DownloadFileAsync(uri, @$"{path}{uri.Host}.html");
+        }
+
+        public string GetHtmlInString(Uri uri)
+        {
+            using WebClient webClient = new WebClient();
             return webClient.DownloadString(uri);
         } 
         
