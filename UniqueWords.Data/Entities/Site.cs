@@ -4,12 +4,12 @@ using System.ComponentModel.DataAnnotations;
 
 namespace UniqueWords.Data.Entities
 {
-    public class Address
+    public class Site
     {
         public Guid Id { get; set; }
 
         [Required]
-        public string Name { get; set; }
+        public string Uri { get; set; }
 
         public ICollection<Word> UniqueWords { get; set; }
     }

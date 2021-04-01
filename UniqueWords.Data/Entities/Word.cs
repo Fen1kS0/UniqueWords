@@ -11,8 +11,8 @@ namespace UniqueWords.Data.Entities
         public string Name { get; set; }
         
         public int Count { get; set; }
-
+        
         [Required]
-        public Address Address { get; set; }
+        public Site Site { get; set; }
     }
 }

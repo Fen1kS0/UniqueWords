@@ -8,15 +8,18 @@ namespace UniqueWords.BL
 
         public Logger()
         {
-            _path = Directory.GetCurrentDirectory() + @"\logs.txt";
+            _path = "logs.txt";
+        }
+
+        public Logger(string path)
+        {
+            _path = path;
         }
 
         public void AddLog(string log)
         {
-            using (StreamWriter sw = new StreamWriter(_path, true))
-            {
-                sw.WriteLine(log);
-            }
+            using StreamWriter sw = new StreamWriter(_path, true);
+            sw.WriteLine(log);
         }
 
         public void Clear()

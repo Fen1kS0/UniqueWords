@@ -1,15 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using AngleSharp.Dom;
 
 namespace UniqueWords.BL
 {
     public class Parser
     {
-        private readonly HtmlController _htmlController;
-        private readonly Logger _logger;
-        
         private readonly char[] _separators =
         {
             ' ', ',', '.', '!', '?','\'', '"', ';',
@@ -20,7 +17,7 @@ namespace UniqueWords.BL
         /// <summary>
         /// Теги, в которых может находиться текст
         /// </summary>
-        private readonly string[] _greenList =
+        private readonly string[] _textTags =
         {
             "div", "span", "li", "a", "p", 
             "h1", "h2", "h3", "h4", "h5", "h6",
@@ -31,38 +28,23 @@ namespace UniqueWords.BL
             "th", "td", "u"
         };
 
-        public Parser()
+        public Parser(IDocument document)
         {
-            _htmlController = new HtmlController();
-            _logger = new Logger();
+            Document = document;
         }
+
+        public IDocument Document { get; set; }
+        
         
         /// <summary>
         /// Разбитие текста страницы на отдельные слова с помощью списка разделителей,
         /// и получение статистики по количеству уникальных слов в тексте.
         /// </summary>
         /// <returns>Массив группировок уникальных слов</returns>
-        public IGrouping<string, string>[] GetWordGrouping(Uri uri)
+        public Dictionary<string, int> GetWordDictionary(Uri uri)
         {
-            string log = $"{DateTime.Now} Connect to {uri.AbsoluteUri}"; 
-
-            IDocument document;
-            
-            try
-            {
-                _htmlController.DownloadHtml(uri);
-                document = _htmlController.GetHtmlDocument(uri);
-            }
-            catch (WebException)
-            {
-                _logger.AddLog(log + " is failed");
-                throw;
-            }
-            
-            _logger.AddLog(log + " is success");
-
-            return document.All
-                .Where(e => _greenList.Contains(e.LocalName))
+            return Document.All
+                .Where(e => _textTags.Contains(e.LocalName))
                 .Select(e => e.TextContent.ToUpper())
                 .Select(s => s.Split(_separators, StringSplitOptions.RemoveEmptyEntries))
                 .SelectMany(s => s)
@@ -70,7 +52,7 @@ namespace UniqueWords.BL
                 .Where(s => s.All(Char.IsLetter))
                 .GroupBy(s => s)
                 .OrderBy(s => s.Count())
-                .ToArray();
+                .ToDictionary(g => g.Key, g => g.Count());
         }
     }
 }

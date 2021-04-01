@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Linq;
+using System.Collections.Generic;
 using UniqueWords.BL;
 using UniqueWords.Menu;
 using UniqueWords.Menu.Enums;
@@ -23,7 +23,7 @@ namespace UniqueWords.Windows
                 switch (point)
                 {
                     case MainMenuPoints.ShowUniqueWords:
-                        ShowUniqueWords();
+                        ParseUniqueWords();
                         break;
                 }
 
@@ -31,33 +31,39 @@ namespace UniqueWords.Windows
             } while (point is not MainMenuPoints.CloseProgram);
         }
 
-        private void ShowUniqueWords()
+        private void ParseUniqueWords()
         {
-            Parser parser = new Parser();
-
             Uri uri = ConsoleHelper.Parse(
-                CreateUri,
+                s => new Uri(s),
                 "Введите адрес страницы: ",
                 u => u.IsWellFormedOriginalString());
 
+            PageController pageController = new PageController(uri);
+            Logger logger = new Logger();
+            
             try
             {
-                var result = parser.GetWordGrouping(uri);
+                Parser parser = new Parser(pageController.GetHtmlDocument());
 
-                foreach (var word in result)
-                {
-                    Console.WriteLine($"{word.Key} - {word.Count()}");
-                }
+                var result = parser.GetWordDictionary(uri);
+                pageController.DownloadHtml();
+                pageController.RecordSiteOnDB(result);
+                
+                ShowUniqueWords(result);
             }
             catch (System.Net.WebException)
             {
+                logger.AddLog($"{DateTime.Now} Connection to {uri.AbsoluteUri} is failed");
                 Console.WriteLine("К серверу невозможно подключиться, введите другой");
             }
         }
 
-        private Uri CreateUri(string uriString)
+        private void ShowUniqueWords(Dictionary<string, int> groupingWords)
         {
-            return new Uri(uriString);
+            foreach (var word in groupingWords)
+            {
+                Console.WriteLine($"{word.Key} - {word.Value}");
+            }
         }
     }
 }
